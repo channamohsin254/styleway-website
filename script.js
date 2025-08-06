@@ -1,220 +1,139 @@
-// script.js
+// Import Firebase SDKs
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// === Admin Login ===
-function loginAdmin() {
-  const user = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-  if (user === "Mohsin" && pass === "Mohsin@9") {
-    document.getElementById("loginBox").classList.add("hidden");
-    document.getElementById("adminPanel").classList.remove("hidden");
-    showAdminProducts();
-  } else {
-    alert("Invalid credentials!");
-  }
-}
+// ✅ Firebase Config (from your project)
+const firebaseConfig = {
+  apiKey: "AIzaSyA5wBXRup_GlXt6lAeLue9j6pByEij0wrY",
+  authDomain: "styleway-2ea88.firebaseapp.com",
+  projectId: "styleway-2ea88",
+  storageBucket: "styleway-2ea88.firebasestorage.app",
+  messagingSenderId: "1089626223478",
+  appId: "1:1089626223478:web:040ac6fbf352e902c84057"
+};
 
-// === Upload Product ===
-function uploadProduct() {
-  const name = document.getElementById("prodName").value;
-  const price = document.getElementById("prodPrice").value;
-  const desc = document.getElementById("prodDesc").value;
-  const files = document.getElementById("prodImages").files;
+// ✅ Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  if (!name || !price || !desc || files.length === 0) {
-    alert("Please fill all fields and select images.");
+// ============================
+// 🔴 ADMIN PANEL FUNCTIONS
+// ============================
+
+// Handle Product Upload from admin.html
+window.uploadProduct = async function () {
+  const name = document.getElementById("productName").value;
+  const price = document.getElementById("productPrice").value;
+  const description = document.getElementById("productDescription").value;
+  const image = document.getElementById("productImage").value;
+
+  if (!name || !price || !description || !image) {
+    alert("Please fill all fields");
     return;
   }
 
-  const imagePromises = Array.from(files).slice(0, 6).map(file => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "styleway_upload_01");
-
-    return fetch("https://api.cloudinary.com/v1_1/dkgevnwc2/image/upload", {
-      method: "POST",
-      body: formData
-    })
-      .then(res => res.json())
-      .then(data => data.secure_url);
-  });
-
-  Promise.all(imagePromises).then(images => {
-    const product = {
-      id: Date.now(),
+  try {
+    await addDoc(collection(db, "products"), {
       name,
       price,
-      desc,
-      images
-    };
-
-    const products = JSON.parse(localStorage.getItem("products")) || [];
-    products.push(product);
-    localStorage.setItem("products", JSON.stringify(products));
+      description,
+      image,
+      createdAt: new Date()
+    });
 
     alert("Product uploaded successfully!");
-    showAdminProducts();
-  });
+    document.getElementById("productForm").reset();
+    loadProducts(); // Refresh list
+  } catch (e) {
+    console.error("Error adding document: ", e);
+    alert("Failed to upload product");
+  }
 }
 
-// === Show Products (Admin Panel) ===
-function showAdminProducts() {
-  const list = document.getElementById("adminProductList");
-  if (!list) return;
+// Fetch and display products in admin panel
+window.loadProducts = async function () {
+  const productList = document.getElementById("productList");
+  if (!productList) return;
 
-  const products = JSON.parse(localStorage.getItem("products")) || [];
-  list.innerHTML = "";
+  productList.innerHTML = "";
 
-  products.forEach(prod => {
+  const querySnapshot = await getDocs(collection(db, "products"));
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
     const div = document.createElement("div");
-    div.className = "product-card";
     div.innerHTML = `
-      <img src="${prod.images[0]}" />
-      <h3>${prod.name}</h3>
-      <p>${prod.price}</p>
-      <button onclick="deleteProduct(${prod.id})">Delete</button>
+      <strong>${data.name}</strong> - Rs.${data.price}
+      <button onclick="deleteProduct('${docSnap.id}')">Delete</button>
     `;
-    list.appendChild(div);
+    productList.appendChild(div);
   });
 }
 
-// === Delete Product ===
-function deleteProduct(id) {
-  let products = JSON.parse(localStorage.getItem("products")) || [];
-  products = products.filter(p => p.id !== id);
-  localStorage.setItem("products", JSON.stringify(products));
-  showAdminProducts();
+// Delete product (admin only)
+window.deleteProduct = async function (id) {
+  await deleteDoc(doc(db, "products", id));
+  alert("Product deleted!");
+  loadProducts();
 }
 
-// === Load Products on index.html ===
-function loadProducts() {
-  const list = document.getElementById("product-list");
-  if (!list) return;
+// ============================
+// 🔴 MAIN PAGE FUNCTIONS
+// ============================
 
-  const products = JSON.parse(localStorage.getItem("products")) || [];
-  list.innerHTML = "";
+window.displayProducts = async function () {
+  const container = document.getElementById("productContainer");
+  if (!container) return;
 
-  products.forEach(prod => {
-    const div = document.createElement("div");
-    div.className = "product-card";
-    div.innerHTML = `
-      <img src="${prod.images[0]}" />
-      <h3>${prod.name}</h3>
-      <p>${prod.price}</p>
-      <button onclick='openModalFromProduct("${prod.name}", "${prod.price}")'>Buy Now</button>
+  container.innerHTML = "";
+
+  const querySnapshot = await getDocs(collection(db, "products"));
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const card = document.createElement("div");
+    card.className = "product-card";
+    card.innerHTML = `
+      <img src="${data.image}" alt="${data.name}" />
+      <h3>${data.name}</h3>
+      <p>Rs.${data.price}</p>
+      <p>${data.description}</p>
+      <button onclick="openOrderModal('${data.name}', '${data.price}')">Buy Now</button>
     `;
-    list.appendChild(div);
+    container.appendChild(card);
   });
 }
-loadProducts();
 
-// === Modal Control ===
-let selectedProductName = '';
-let selectedProductPrice = '';
+// Show order form modal (Buy Now)
+window.openOrderModal = function (productName, productPrice) {
+  const modal = document.getElementById("orderModal");
+  if (!modal) return;
 
-function openModalFromProduct(name, price) {
-  selectedProductName = name;
-  selectedProductPrice = price;
-  openModal();
+  modal.style.display = "block";
+  document.getElementById("orderProductName").innerText = productName;
+  document.getElementById("orderProductPrice").innerText = "Rs. " + productPrice;
 }
 
-function openModal() {
-  document.getElementById("orderModal").style.display = "flex";
+// Close modal
+window.closeOrderModal = function () {
+  const modal = document.getElementById("orderModal");
+  if (modal) modal.style.display = "none";
 }
 
-function closeModal() {
-  document.getElementById("orderModal").style.display = "none";
-}
+// Send order via WhatsApp
+window.submitOrder = function () {
+  const name = document.getElementById("customerName").value;
+  const address = document.getElementById("customerAddress").value;
+  const number = document.getElementById("customerNumber").value;
+  const product = document.getElementById("orderProductName").innerText;
+  const price = document.getElementById("orderProductPrice").innerText;
 
-// === Submit Order via WhatsApp ===
-function submitOrder() {
-  const name = document.getElementById("orderName").value;
-  const phone = document.getElementById("orderNumber").value;
-  const address = document.getElementById("orderAddress").value;
-
-  if (!name || !phone || !address) {
-    alert("Please fill all fields.");
+  if (!name || !address || !number) {
+    alert("Please fill all fields");
     return;
   }
 
-  const message = `Hello Style Way! 👕\n\nI want to order:\n🛍️ Product: ${selectedProductName}\n💵 Price: ${selectedProductPrice}\n\nMy Details:\n📛 Name: ${name}\n📞 Phone: ${phone}\n🏠 Address: ${address}`;
+  const message = `New Order:\nProduct: ${product}\nPrice: ${price}\nName: ${name}\nAddress: ${address}\nContact: ${number}`;
+  const whatsappURL = `https://wa.me/923337307009?text=${encodeURIComponent(message)}`;
+  window.open(whatsappURL, "_blank");
 
-  window.open(`https://wa.me/923337307009?text=${encodeURIComponent(message)}`, "_blank");
-}
-
-// === Load Product Detail on product.html ===
-function loadProductDetail() {
-  const productId = sessionStorage.getItem("selectedProduct");
-  const products = JSON.parse(localStorage.getItem("products")) || [];
-  const product = products.find(p => p.id == productId);
-  if (!product) return;
-
-  selectedProductName = product.name;
-  selectedProductPrice = product.price;
-
-  document.getElementById("detailName").innerText = product.name;
-  document.getElementById("detailPrice").innerText = product.price;
-  document.getElementById("detailDesc").innerText = product.desc;
-
-  const imageBox = document.getElementById("productImages");
-  product.images.forEach(img => {
-    const image = document.createElement("img");
-    image.src = img;
-    imageBox.appendChild(image);
-  });
-}
-
-// === Load Other Products on product.html ===
-function loadOtherProducts() {
-  const list = document.getElementById("product-list");
-  if (!list) return;
-
-  const currentId = sessionStorage.getItem("selectedProduct");
-  const products = JSON.parse(localStorage.getItem("products")) || [];
-  const others = products.filter(p => p.id != currentId);
-
-  others.forEach(prod => {
-    const div = document.createElement("div");
-    div.className = "product-card";
-    div.innerHTML = `
-      <img src="${prod.images[0]}" />
-      <h3>${prod.name}</h3>
-      <p>${prod.price}</p>
-      <button onclick='openModalFromProduct("${prod.name}", "${prod.price}")'>Buy Now</button>
-    `;
-    list.appendChild(div);
-  });
-}
-
-// === Countdown Timer ===
-let time = 300;
-const timerEl = document.getElementById("timer");
-if (timerEl) {
-  const countdown = setInterval(() => {
-    if (time <= 0) {
-      clearInterval(countdown);
-      timerEl.innerText = "00:00";
-    } else {
-      const mins = String(Math.floor(time / 60)).padStart(2, "0");
-      const secs = String(time % 60).padStart(2, "0");
-      timerEl.innerText = `${mins}:${secs}`;
-      time--;
-    }
-  }, 1000);
-}
-
-// === Fake Notification Slider ===
-const notifications = [
-  "Ali just bought a shirt!",
-  "Fatima ordered a hoodie!",
-  "Usman purchased jeans!",
-  "Sana added a kurti to cart!",
-  "Bilal bought sneakers!"
-];
-
-let notifyEl = document.getElementById("notification");
-if (notifyEl) {
-  setInterval(() => {
-    const random = notifications[Math.floor(Math.random() * notifications.length)];
-    notifyEl.innerText = `🛍️ ${random}`;
-  }, 5000);
+  closeOrderModal();
 }
