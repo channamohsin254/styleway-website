@@ -22,12 +22,16 @@
     <div id="uploadSection" style="display:none;">
       <h2>Upload Product</h2>
       <form id="productForm">
-        <input type="text" id="productName" placeholder="Product Name" required /><br/>
-        <input type="text" id="productPrice" placeholder="Price" required /><br/>
-        <textarea id="productDescription" placeholder="Description" required></textarea><br/>
-        <input type="text" id="productImage" placeholder="Image URL" required /><br/>
-        <button type="button" onclick="uploadProduct()">Upload</button>
-      </form>
+  <input type="text" id="productName" placeholder="Product Name" required /><br/>
+  <input type="text" id="productPrice" placeholder="Price" required /><br/>
+  <textarea id="productDescription" placeholder="Description" required></textarea><br/>
+  
+  <!-- ✅ Updated file input for multiple image upload -->
+  <input type="file" id="productImages" accept="image/*" multiple required /><br/>
+  
+  <button type="button" onclick="uploadProduct()">Upload</button>
+</form>
+
 
       <h2>All Uploaded Products</h2>
       <div id="productList"></div>
