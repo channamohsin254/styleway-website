@@ -1,0 +1,36 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - Style Way</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Login Screen -->
+    <div id="loginBox" class="login-box">
+      <h2>Admin Login</h2>
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="loginAdmin()">Login</button>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel hidden">
+      <h2>Upload New Product</h2>
+      <input type="text" id="prodName" placeholder="Product Name" />
+      <input type="number" id="prodPrice" placeholder="Product Price" />
+      <textarea id="prodDesc" placeholder="Product Description"></textarea>
+      <input type="file" id="prodImages" multiple accept="image/*" />
+      <button onclick="uploadProduct()">Upload</button>
+
+      <h3>Uploaded Products</h3>
+      <div id="adminProductList" class="product-grid"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

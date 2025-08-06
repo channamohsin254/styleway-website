@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Details - Style Way</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .product-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 40px auto;
+      max-width: 1100px;
+      padding: 20px;
+    }
+    .image-gallery {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .image-gallery img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .product-info {
+      flex: 1;
+    }
+    .product-info h1 {
+      margin-top: 0;
+    }
+    .other-products {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .product-card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+      text-align: center;
+    }
+    .product-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    @media (max-width: 768px) {
+      .product-details {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="product-details" id="productDetail"></div>
+
+  <div class="other-products">
+    <h2>Other Products</h2>
+    <div class="product-grid" id="otherProducts"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const productId = parseInt(params.get("id"));
+    const allProducts = JSON.parse(localStorage.getItem("products")) || [];
+
+    const product = allProducts.find(p => p.id === productId);
+
+    const productDiv = document.getElementById("productDetail");
+    const otherProductsDiv = document.getElementById("otherProducts");
+
+    if (!product) {
+      productDiv.innerHTML = "<p>Product not found.</p>";
+    } else {
+      const gallery = product.images.map(img => `<img src="${img}" alt="${product.name}" />`).join("");
+      productDiv.innerHTML = `
+        <div class="image-gallery">
+          ${gallery}
+        </div>
+        <div class="product-info">
+          <h1>${product.name}</h1>
+          <h3>Price: Rs. ${product.price}</h3>
+          <p>${product.description || ''}</p>
+        </div>
+      `;
+
+      // Show other products
+      const others = allProducts.filter(p => p.id !== productId);
+      others.forEach(p => {
+        const img = p.images[0] || "";
+        const div = document.createElement("div");
+        div.className = "product-card";
+        div.innerHTML = `
+          <img src="${img}" alt="${p.name}" />
+          <h3>${p.name}</h3>
+          <p>Rs. ${p.price}</p>
+          <a href="product.html?id=${p.id}">View Details</a>
+        `;
+        otherProductsDiv.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
