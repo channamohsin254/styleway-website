@@ -1,13 +1,20 @@
-// Import Firebase SDKs
+// ✅ Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ✅ Firebase Config (from your project)
+// ✅ Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyA5wBXRup_GlXt6lAeLue9j6pByEij0wrY",
   authDomain: "styleway-2ea88.firebaseapp.com",
   projectId: "styleway-2ea88",
-  storageBucket: "styleway-2ea88.firebasestorage.app",
+  storageBucket: "styleway-2ea88.appspot.com",  // ✅ corrected
   messagingSenderId: "1089626223478",
   appId: "1:1089626223478:web:040ac6fbf352e902c84057"
 };
@@ -20,7 +27,7 @@ const db = getFirestore(app);
 // 🔴 ADMIN PANEL FUNCTIONS
 // ============================
 
-// Handle Product Upload from admin.html
+// ✅ Upload Product from Admin Panel
 window.uploadProduct = async function () {
   const name = document.getElementById("productName").value;
   const price = document.getElementById("productPrice").value;
@@ -41,16 +48,16 @@ window.uploadProduct = async function () {
       createdAt: new Date()
     });
 
-    alert("Product uploaded successfully!");
+    alert("✅ Product uploaded successfully!");
     document.getElementById("productForm").reset();
-    loadProducts(); // Refresh list
-  } catch (e) {
-    console.error("Error adding document: ", e);
-    alert("Failed to upload product");
+    loadProducts(); // Refresh after upload
+  } catch (error) {
+    console.error("❌ Error uploading product:", error);
+    alert("Failed to upload product.");
   }
-}
+};
 
-// Fetch and display products in admin panel
+// ✅ Load Products in Admin Panel
 window.loadProducts = async function () {
   const productList = document.getElementById("productList");
   if (!productList) return;
@@ -67,19 +74,25 @@ window.loadProducts = async function () {
     `;
     productList.appendChild(div);
   });
-}
+};
 
-// Delete product (admin only)
+// ✅ Delete Product
 window.deleteProduct = async function (id) {
-  await deleteDoc(doc(db, "products", id));
-  alert("Product deleted!");
-  loadProducts();
-}
+  try {
+    await deleteDoc(doc(db, "products", id));
+    alert("✅ Product deleted!");
+    loadProducts(); // Refresh after delete
+  } catch (error) {
+    console.error("❌ Error deleting product:", error);
+    alert("Failed to delete product.");
+  }
+};
 
 // ============================
 // 🔴 MAIN PAGE FUNCTIONS
 // ============================
 
+// ✅ Display Products on Main Page
 window.displayProducts = async function () {
   const container = document.getElementById("productContainer");
   if (!container) return;
@@ -100,9 +113,9 @@ window.displayProducts = async function () {
     `;
     container.appendChild(card);
   });
-}
+};
 
-// Show order form modal (Buy Now)
+// ✅ Open Order Modal
 window.openOrderModal = function (productName, productPrice) {
   const modal = document.getElementById("orderModal");
   if (!modal) return;
@@ -110,15 +123,15 @@ window.openOrderModal = function (productName, productPrice) {
   modal.style.display = "block";
   document.getElementById("orderProductName").innerText = productName;
   document.getElementById("orderProductPrice").innerText = "Rs. " + productPrice;
-}
+};
 
-// Close modal
+// ✅ Close Order Modal
 window.closeOrderModal = function () {
   const modal = document.getElementById("orderModal");
   if (modal) modal.style.display = "none";
-}
+};
 
-// Send order via WhatsApp
+// ✅ Submit Order via WhatsApp
 window.submitOrder = function () {
   const name = document.getElementById("customerName").value;
   const address = document.getElementById("customerAddress").value;
@@ -131,9 +144,9 @@ window.submitOrder = function () {
     return;
   }
 
-  const message = `New Order:\nProduct: ${product}\nPrice: ${price}\nName: ${name}\nAddress: ${address}\nContact: ${number}`;
+  const message = `🛒 *New Order Received!*\n\n📦 Product: ${product}\n💰 Price: ${price}\n👤 Name: ${name}\n📍 Address: ${address}\n📞 Contact: ${number}`;
   const whatsappURL = `https://wa.me/923337307009?text=${encodeURIComponent(message)}`;
   window.open(whatsappURL, "_blank");
 
   closeOrderModal();
-}
+};
